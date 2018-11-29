@@ -8,8 +8,9 @@ TICK_DIR = './data' # path to folder containing serialized historical tick data
 # this is approximate. Unless values are a magnitude away from true values, I should be fine
 # The main_pair purpose of this is to just pass by opportunities that net insignificant profit
 VALUE_REF = {
-             'BTC':500.0,       # bitcoin
-             'LTC':15.0,       # litecoin
+             'BTC': 4200.0,       # bitcoin
+             'LTC': 33.0,       # litecoin
+             'ETH': 117.0,       # ether
              'DOGE': 0.0015,     # dogecoin
              'PPC': 4.00,       # peercoin
              'NMC':3.90,        # namecoin

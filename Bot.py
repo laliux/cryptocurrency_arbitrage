@@ -61,7 +61,7 @@ class Bot(object):
         self.trading_enabled = True
         self.tick_i = 0
 
-    def start(self, sleep=0): # for live/paper trading
+    def start(self, sleep=10): # for live/paper trading
         start = time.time()
         last_tick = start - sleep
         while not self.error:
@@ -163,6 +163,7 @@ class Bot(object):
                     # threads.append(balance_thread)
                     # multithreaded update depth
                     depth_thread = UpdateDepthThread(broker, pair, self.backtest_data, self.tick_i)
+                    depth_thread.daemon=True
                     depth_thread.start()
                     threads.append(depth_thread)
                 for t in threads:

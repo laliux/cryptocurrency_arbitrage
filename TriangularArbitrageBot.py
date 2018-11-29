@@ -28,6 +28,7 @@ class TriangularArbitrageBot(Bot):
         for C in xchg.tradeable_currencies:
             if (xchg.get_validated_pair((base, C)) is not None) and (xchg.get_validated_pair((alt, C)) is not None):
                 currencies.append(C)
+        #TODO: remove range
         return currencies
 
     def init_cross_markets(self):
@@ -55,8 +56,9 @@ class TriangularArbitrageBot(Bot):
                 self.update_pairs[slug] = [pair] # after all, this is the most important one to update!
                 for cm in self.cross_market_currencies[slug]:
                     if cm not in ['USD', 'CNY', 'EUR']: # ignore fiat currency for the time being
-                        self.update_pairs[slug].append((base, cm))
+                        #self.update_pairs[slug].append((base, cm))
                         self.update_pairs[slug].append((cm, alt))
+                        self.update_pairs[slug].append((cm, base))
 
                 print('update pairs for %s: %s' % (slug, self.update_pairs[slug]))
 
@@ -72,12 +74,15 @@ class TriangularArbitrageBot(Bot):
         # better to just update on each pair we trade (after all, we affect the orderbook)
         for pair in self.config.PAIRS:
             slug = pair[0] + '_' + pair[1]
-            if self.backtest_data is not None:
-                self.broker.update_multiple_depths(self.update_pairs[slug], self.backtest_data, self.tick_i)
-            else:
+            if self.backtest_data is None:
                 self.broker.update_multiple_depths(self.update_pairs[slug])
+                print ('No backtest data')
+            else:
+                self.broker.update_multiple_depths(self.update_pairs[slug], self.backtest_data, self.tick_i)
+                print ('Using backtest data')
             # if we are in gathering mode, do not trade!
             if self.trading_enabled:
+                print ("Trading enabled... Trade pair ( %s )" % str(pair))
                 self.trade_pair(self.broker, pair)
 
     def trade_pair(self, broker, pair):
@@ -91,24 +96,19 @@ class TriangularArbitrageBot(Bot):
         # type1 and type2 roundtrips are in fact completely mutually exclusive!
         # that means that if we detect both type1 and type2 roundtrips, we can simultaneously
         # execute both without worrying about moving the market.
-        for type in [1,2]:
-            if pc.check_profits(type):
-                print('Potentially Profitable Type%d Spread' % type)
-                order_triplet = pc.get_best_roundtrip(type)
+        for _type in [1,2]:
+            if pc.check_profits(_type):
+                print('Potentially Profitable Type%d Spread' % _type)
+                order_triplet = pc.get_best_roundtrip(_type)
                 if order_triplet is not None:
-                    print('Submitting Arbitrage Trades...')
+                    print ('Submitting Arbitrage Trades...')
                     # submit each order in sequence.
 
-                #if order_triplet is not None:
-                #    print('Type%d Arbitrage Opportunity Detected!' % type)
-                    # submit each order
+                    for order in order_triplet:
+                        print (order.info())
 
-
-
-#                 triplet = pc.get_best_roundtrip()
-#                 for (bidder, order) in triplet:
-                # for now, just print the order, test to see if you can execute manually.
-                # order_id, t = bidder.submit(order)
+                    # for now, just print the order, test to see if you can execute manually.
+                    #order_id, t = bidder.submit(order)
 
 #                     # production TODO - each broker automatically cancels orders if they don't go through.
 #                     while not bidder.confirm_order(order_id):

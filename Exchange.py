@@ -16,10 +16,6 @@ class Exchange(object):
         self.ok = True
         self.tradeable_pairs = list()
         self.tradeable_currencies = list()
-        
-        
-        #self.tradeable_pairs = self.get_tradeable_pairs()
-        #self.set_tradeable_currencies()
 
         # dictionary of outstanding orders.
         self.outstanding_orders = {}
@@ -32,16 +28,6 @@ class Exchange(object):
     def get_tradeable_pairs(self):
         return self.tradeable_pairs
 
-#     # Someone wants to buy base with alt (unit is alt)
-#     @abc.abstractmethod
-#     def get_highest_bid(self, base, alt):
-#         return NotImplemented
-#
-#     # Someone wants to sell base for alt (unit is alt)
-#     @abc.abstractmethod
-#     def get_lowest_ask(self, base, alt):
-#         return NotImplemented
-
     @abc.abstractmethod
     def get_depth(self, base, alt):
         '''
@@ -53,6 +39,7 @@ class Exchange(object):
         '''
         return NotImplemented
 
+    @abc.abstractmethod
     def get_multiple_depths(self, pairs):
         """
         returns entire orderbook for multiple exchanges.
@@ -60,14 +47,7 @@ class Exchange(object):
         the default implementation is to simply fetch one pair at a time, but this is very slow.
         Some exchanges already provide full orderbooks when fetching market data, so superclass those.
         """
-        depth = {}
-        for (base, alt) in pairs:
-            try:
-                depth[base + '_' + alt] = self.get_depth(base, alt)
-            except:
-                 print('problemo!!')
-                 depth[base + '_' + alt] = {'bids':[],'asks':[]}
-        return depth
+        return NotImplemented
 
     @abc.abstractmethod
     def get_balance(self, currency):
@@ -179,7 +159,9 @@ class Exchange(object):
         alt_remainder = utils.total_alt_volume(orders[:i]) - desired_alt_volume
         # convert back to units base and subtract from last order
         orders[i-1].v -= alt_remainder/orders[i-1].p
-        return sum([o.v for o in orders[:i]])
+        
+        return orders[:i]
+        #return sum([o.v for o in orders[:i]])
 
 
     def get_validated_pair(self, pair):
@@ -189,11 +171,12 @@ class Exchange(object):
         returns (true_pair, swapped)
         else if pair isn't even traded, return None
         """
-        base, alt = pair
+        alt, base = pair
+        #print ('checking for pair %s ' % str(pair))
         if pair in self.tradeable_pairs:
             return (pair, False)
-        elif (alt, base) in self.tradeable_pairs:
-            return ((alt,base), True)
+        elif (base, alt) in self.tradeable_pairs:
+            return ((base, alt), True)
         else:
             # pair is not even traded
             return None

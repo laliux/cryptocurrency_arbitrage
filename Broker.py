@@ -19,29 +19,44 @@ class Broker(object):
 
     def get_highest_bid(self, pair):
         base, alt = pair
+        
         slug = base + "_" + alt
+        #slug = alt + "_" + base
+
+        #print ('Checking get_highest_bid() with slug %s ' % slug)
+        #print ('slug in self.depth %s' % str(slug in self.depth))
+
         if slug in self.depth and len(self.depth[slug]['bids']) > 0:
+            #print ('bids info is ok for slug %s ' % slug)
             return self.depth[slug]['bids'][0].p
+        
         swapped_slug = alt + "_" + base
+        
         if swapped_slug in self.depth and len(self.depth[swapped_slug]['asks']) > 0:
             print('WEIRD, this shouldn\'t being getting called!')
-            ask = self.rates[swapped_slug]['asks'][0]
-            return get_swapped_order(ask).p
-        return None
+            #ask = self.rates[swapped_slug]['asks'][0]
+            #return get_swapped_order(ask).p
+            return None
 
     def get_lowest_ask(self, pair):
         base, alt = pair
+        
         slug = base + "_" + alt
+        #slug = alt + "_" + base
+
         if slug in self.depth and len(self.depth[slug]['asks']) > 0:
+            #print ('asks info is ok for slug %s ' % slug)
             return self.depth[slug]['asks'][0].p
+        
         swapped_slug = alt + "_" + base
+
         # note - there should actually be no reason that the swapped low ask gets called, because we are already fetching
         # all the depths in the order that we would actually see them!
         if swapped_slug in self.depth and len(self.depth[swapped_slug]['bids']) > 0:
             print('WEIRD, this shouldn\'t being getting called!')
-            bid = self.rates[swapped_slug]['bids'][0]
-            return get_swapped_order(bid).p
-        return None
+            #bid = self.rates[swapped_slug]['bids'][0]
+            #return get_swapped_order(bid).p
+            return None
 
     def get_orders(self, pair, type):
         """

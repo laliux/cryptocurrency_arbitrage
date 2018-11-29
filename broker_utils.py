@@ -1,7 +1,6 @@
 import config
 
 from Broker import Broker
-from CoinEx import CoinEx
 from CryptoExchange import CryptoExchange
 
 def create_brokers(mode, pairs, exchangeNames):
@@ -10,8 +9,6 @@ def create_brokers(mode, pairs, exchangeNames):
     for name in exchangeNames:
         if (name == 'binance'):
             xchg = CryptoExchange('binance', config.BINANCE_KEY, config.BINANCE_SECRET)
-        elif (name == 'COINEX'):
-            xchg = CoinEx(config.COINEX_API_KEY, config.COINEX_SECRET)
         else:
             print('Exchange ' + name + ' not supported!')
             continue

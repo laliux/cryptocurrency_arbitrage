@@ -52,12 +52,15 @@ class TriangleProfitCalculator(object):
         """
         base, alt = self.pair
         tx = 1 - self.broker.xchg.trading_fee
+        #print ('Calling check_type1_profits() with pair %s ' % str(self.pair))
         lo_ask = self.broker.get_lowest_ask(self.pair)
         count = 0
         for C in self.roundtrip_currencies:
             # calculate implied hi bid rate
-            sell_A_C = self.broker.get_highest_bid((base,C))
-            sell_C_B = self.broker.get_highest_bid((C,alt))
+            #sell_A_C = self.broker.get_highest_bid((base,C))
+            sell_A_C = self.broker.get_highest_bid((C, base))
+            sell_C_B = self.broker.get_highest_bid((C, alt))
+
             if sell_A_C is None:
                 print('Empty %s_%s bid orders, skipping...' % (base,C))
                 continue
@@ -79,18 +82,35 @@ class TriangleProfitCalculator(object):
         base, alt = self.pair
         tx = 1 - self.broker.xchg.trading_fee
         hi_bid = self.broker.get_highest_bid(self.pair)
+
+        print ('Hi_bid for %s %.4f' % (str(self.pair), hi_bid))
         count = 0
         for C in self.roundtrip_currencies:
             # calculate implied lo ask rate
             buy_C_B = self.broker.get_lowest_ask((C,alt))
-            buy_A_C = self.broker.get_lowest_ask((base,C))
+            if buy_C_B is None :
+                print ("ERROR getting get_lowest_ask value for  %s, %s " % (C,alt))
+                continue
+
+            #buy_A_C = self.broker.get_lowest_ask((base,C))
+            buy_A_C = self.broker.get_lowest_ask((C, base))
+
+            if buy_A_C is None:
+                print ("ERROR getting get_lowest_ask value for  %s %s " % (C, base))
+                continue
+
+
             # how many alts it would REALLY cost me to buy 1 unit of base (i.e. end up with exactly 1 unit of base)
             implied_lo_ask = (buy_C_B * 1.0/tx) * (buy_A_C * 1.0/tx)
             # hi_bid is multiplied by tx one more time because thats how much alts we recv for selling 1 unit of base
             # and subtract from that the amount of alts we pay exactly for 1 unit of base
             spread = hi_bid * tx - implied_lo_ask
+
             self.type2_spreads[C] = spread
             if spread > config.PROFIT_THRESH[alt]:
+                print ('Type2 for %s vs ALT(%s) buy_C_B %s %.4f buy_A_C %s %.4f , implied_lo_ask %.4f, spread %.4f' % 
+                    (C, alt, (C,alt), buy_C_B, (base,C), buy_A_C, implied_lo_ask, spread))
+
                 count += 1
         #if count > 0:
         #    print('detected %d profitable spreads!' % count)
@@ -137,9 +157,9 @@ class TriangleProfitCalculator(object):
                 # buy back exactly how much DOGE we spent in the first place
                 asks_ab_clipped = b.xchg.get_clipped_base_volume(asks_ab, v1/tx)
                 # construct the orders
-                o1 = Order(utils.lowest_price(bids_ac_clipped), utils.total_base_volume(bids_ac_clipped), type="sell", pair=(A,C))
-                o2 = Order(utils.lowest_price(bids_cb_clipped), utils.total_base_volume(bids_cb_clipped), type="sell", pair=(C,B))
-                o3 = Order(utils.highest_price(asks_ab_clipped), utils.total_base_volume(asks_ab_clipped), type="buy", pair=(A,B))
+                o1 = Order(utils.lowest_price(bids_ac_clipped), utils.total_base_volume(bids_ac_clipped), order_type="sell", pair=(A,C))
+                o2 = Order(utils.lowest_price(bids_cb_clipped), utils.total_base_volume(bids_cb_clipped), order_type="sell", pair=(C,B))
+                o3 = Order(utils.highest_price(asks_ab_clipped), utils.total_base_volume(asks_ab_clipped), order_type="buy", pair=(A,B))
                 # test orders for profitability
                 self.type1_roundtrips[C]["orders"] = [o1, o2, o3]
 
@@ -148,7 +168,7 @@ class TriangleProfitCalculator(object):
                 netC = utils.total_alt_volume(bids_ac_clipped) * tx - o2.v
 
                 self.type1_roundtrips[C]["profit"] = netB
-                print('check...')
+                #print('check...')
         return self._get_highest_profit(self.type1_roundtrips)
 
     def get_best_type2_roundtrip(self):
@@ -164,22 +184,36 @@ class TriangleProfitCalculator(object):
             if spread > config.PROFIT_THRESH[B]:
                 self.type2_roundtrips[C] = {}
                 asks_cb = b.get_orders((C,B), 'asks') # people who are buying C_B
-                asks_ac = b.get_orders((A,C), 'asks') # people who are buying A_C
+                
+                # people who are buying A_C
+                #asks_ac = b.get_orders((A,C), 'asks') 
+                asks_ac = b.get_orders((C, A), 'asks') 
 
                 # minimum volume constraints
-                min_cb = b.xchg.get_min_vol((A,C), asks_cb) # how much DOGE we have to sell in the first trade
-                min_ac = b.xchg.get_min_vol((C,B), asks_ac) # how much LTC we have to sell in the second trade
+                # how much DOGE we have to sell in the first trade
+                #min_cb = b.xchg.get_min_vol((A,C), asks_cb) 
+                min_cb = b.xchg.get_min_vol((C, A), asks_cb) 
+                # how much LTC we have to sell in the second trade
+                min_ac = b.xchg.get_min_vol((C,B), asks_ac) 
                 min_ab = b.xchg.get_min_vol((A,B), bids_ab) # how much DOGE we have to buy in the third trade
 
                 asks_cb_clipped = b.xchg.get_clipped_base_volume(asks_cb, min_cb) # buy exactly minimum quantity
                 asks_ac_clipped = b.xchg.get_clipped_alt_volume(asks_ac, min_cb*tx) # can probably spend less than 0.01 LTC buying 0.01 DOGE
-                v3 = utils.total_base_volume(asks_ac_clipped) * tx # total DOGE we receive
+
+                #print ('type of asks_cb_clipped: %s ' % str(type(asks_cb_clipped)))
+                #print ('type of asks_ac_clipped: %s ' % str(type(asks_ac_clipped)))
+                
+
+                # total DOGE we receive
+                v3 = utils.total_base_volume(asks_ac_clipped) * tx 
                 bids_ab_clipped = b.xchg.get_clipped_base_volume(bids_ab, v3) # sell all the DOGE for BTC
 
+                #print ('type of bids_ab_clipped: %s ' % str(type(bids_ab_clipped)))
+
                 # construct the orders that we submit
-                o1 = Order(utils.highest_price(asks_cb_clipped), utils.total_base_volume(asks_cb_clipped), type="buy", pair=(C,B))
-                o2 = Order(utils.highest_price(asks_ac_clipped), utils.total_base_volume(asks_ac_clipped), type="buy", pair=(A,C))
-                o3 = Order(utils.lowest_price(bids_ab_clipped), utils.total_base_volume(bids_ab_clipped), type="sell", pair=(A,B))
+                o1 = Order(utils.highest_price(asks_cb_clipped), utils.total_base_volume(asks_cb_clipped), order_type="buy", pair=(C,B))
+                o2 = Order(utils.highest_price(asks_ac_clipped), utils.total_base_volume(asks_ac_clipped), order_type="buy", pair=(A,C))
+                o3 = Order(utils.lowest_price(bids_ab_clipped), utils.total_base_volume(bids_ab_clipped), order_type="sell", pair=(A,B))
 
                 self.type2_roundtrips[C]["orders"] = [o1, o2, o3]
                 # these calculations should adequately take volume into account
@@ -188,7 +222,8 @@ class TriangleProfitCalculator(object):
                 netC = o1.v * tx - utils.total_alt_volume(asks_ac_clipped)
 
                 self.type2_roundtrips[C]["profit"] = netB
-                print('check ... ')
+                #print('check ... ')
+
         # loop through C and choose the one with the largest profit
         return self._get_highest_profit(self.type2_roundtrips)
 

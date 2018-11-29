@@ -1,7 +1,6 @@
 import ccxt
 
 from Exchange import Exchange
-from crypto_trade import CryptoTradeAPI
 from myutils import get_swapped_order
 from order import Order
 
@@ -17,7 +16,7 @@ class CryptoExchange(Exchange):
 
         self.set_tradeable_pairs()
 
-        self.trading_fee = 0.002
+        self.trading_fee = 0.001
 
     def set_tradeable_pairs(self):
         exchange_markets = dict()
@@ -52,13 +51,18 @@ class CryptoExchange(Exchange):
         self.tradeable_currencies.append('BTC')
         self.tradeable_currencies.append('ETH')    
 
-    def get_depth(self, base, alt):
+    def get_depth(self, alt, base):
         book = {'bids': [], 'asks': []}
-        """
-        pair, swapped = self.get_validated_pair((base, alt))
-        b,a = pair
-        slug = b.lower() + "_" + a.lower()
-        data = self.api.reqpublic('depth' + '/' + slug)
+        
+        pair, swapped = self.get_validated_pair((alt, base))
+        a,b = pair
+
+        slug = a + "/" + b
+
+        #print ("slug to fetch order book: %s swaped %s" % (slug, swapped))
+        
+        data = self.exchange.fetch_order_book(slug)
+        
         if swapped:
             for ask in data['asks']:
                 o = Order(float(ask[0]), float(ask[1]))
@@ -75,8 +79,27 @@ class CryptoExchange(Exchange):
             for ask in data['asks']:
                 o = Order(float(ask[0]), float(ask[1]))
                 book['asks'].append(o)
-        """
+
         return book
+
+    def get_multiple_depths(self, pairs):
+        """
+        returns entire orderbook for multiple exchanges.
+        Very useful for triangular arb, but note that not all exchanges support this.
+        the default implementation is to simply fetch one pair at a time, but this is very slow.
+        Some exchanges already provide full orderbooks when fetching market data, so superclass those.
+        """
+        depth = {}
+        for (alt, base) in pairs:
+            try:
+                depth[alt + '_' + base] = self.get_depth(alt, base)
+            except:
+                depth[alt + '_' + base] = {'bids':[],'asks':[]}
+
+        print ('Depth keys: %s' % str(list(depth.keys() )))
+
+        return depth
+
 
     def get_balance(self, currency):
         #funds = self.api.req('getinfo')['data']['funds']
