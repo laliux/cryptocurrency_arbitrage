@@ -1,4 +1,4 @@
 from config import *
-#EXCHANGES = ['COINEX']
-EXCHANGES = ['CRYPTSY']
-PAIRS = [("LTC","BTC")]
+
+EXCHANGES = ['binance']
+PAIRS = [("ETH","BTC")]

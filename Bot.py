@@ -7,7 +7,7 @@ import threading
 import time
 from Logger import Logger
 from ProfitCalculator import ProfitCalculator
-import cPickle as pickle
+import pickle
 from os.path import abspath
 from order import Order # Order class needs to be present for de-serialization of orders
 from broker_utils import get_assets, print_assets

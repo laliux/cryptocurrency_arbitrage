@@ -57,7 +57,8 @@ class TriangularArbitrageBot(Bot):
                     if cm not in ['USD', 'CNY', 'EUR']: # ignore fiat currency for the time being
                         self.update_pairs[slug].append((base, cm))
                         self.update_pairs[slug].append((cm, alt))
-            print('update pairs for %s: %s' % (slug, self.update_pairs[slug]))
+
+                print('update pairs for %s: %s' % (slug, self.update_pairs[slug]))
 
     def tick(self):
         """

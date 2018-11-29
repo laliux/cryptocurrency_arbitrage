@@ -30,25 +30,9 @@ PAPER_BALANCE = {k:20/v for k,v in VALUE_REF.items()} # for 7 exchanges, have
 # In a paired trade, I'm really moving twice as much value on both ends.
 BTC_RISK = 0.001 # as you grow more confident in the stability of the trading bot, you can increase riskiness by decreasing this number.
 
-# VIRCUREX API
-VIRCUREX_USER = 'ericjang'
-VIRCUREX_PASS = 'yourpasshere'
-VIRCUREX_SECURITY_WORD = '12u3pou2oi5upo'
-
-# CRYPTSY API
-CRYPTSY_API_KEY =  "yourkeyhere"
-CRYPTSY_SECRET = "yoursecretkeyhere"
-# COINS-E API
-COINS_E_API_KEY =  "yourkeyhere"
-COINS_E_SECRET = "yoursecretkeyhere"
-# BTC-E API
-BTCE_KEYFILE = "btce_key.txt"
-# BTER API
-BTER_KEYFILE = "bter_key.txt"
-# CRYPTO-TRADE API
-CRYPTOTRADE_API_KEY = "yourkeyhere"
-CRYPTOTRADE_SECRET = "yoursecretkeyhere"
 # COINEX API
 COINEX_API_KEY = "yourkeyhere"
 COINEX_SECRET = "yoursecretkeyhere"
 
+BINANCE_KEY = 'foo'
+BINANCE_SECRET = 'bar'

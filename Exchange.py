@@ -14,15 +14,23 @@ class Exchange(object):
         self.name = None
         self.trading_fee = None
         self.ok = True
-        self.tradeable_pairs = self.get_tradeable_pairs()
-        self.set_tradeable_currencies()
+        self.tradeable_pairs = list()
+        self.tradeable_currencies = list()
+        
+        
+        #self.tradeable_pairs = self.get_tradeable_pairs()
+        #self.set_tradeable_currencies()
+
         # dictionary of outstanding orders.
         self.outstanding_orders = {}
 
-    # Output:
     @abc.abstractmethod
-    def get_tradeable_pairs(self):
+    def set_tradeable_pairs(self):
         return NotImplemented
+
+    # Output:
+    def get_tradeable_pairs(self):
+        return self.tradeable_pairs
 
 #     # Someone wants to buy base with alt (unit is alt)
 #     @abc.abstractmethod
@@ -190,14 +198,16 @@ class Exchange(object):
             # pair is not even traded
             return None
 
+    """
     def set_tradeable_currencies(self):
-        """
+        
         once tradeable pairs initialized, build list of all tradeable currencies.
         will be needed for triangular arb strategy.
-        """
+        
         C = {}
         for (base, alt) in self.tradeable_pairs:
             C[base] = ''
             C[alt] = ''
         self.tradeable_currencies = C.keys()
+        """
 

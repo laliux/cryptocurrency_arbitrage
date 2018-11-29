@@ -1,32 +1,15 @@
+import config
 
 from Broker import Broker
-
-# exchanges
-import config
-from BTCE import BTCE
-from Cryptsy import Cryptsy
-from BTER import BTER
 from CoinEx import CoinEx
-from CoinsE import CoinsE
-from Vircurex import Vircurex
-from CryptoTrade import CryptoTrade
+from CryptoExchange import CryptoExchange
 
 def create_brokers(mode, pairs, exchangeNames):
     # returns an array of Broker objects
     brokers = []
     for name in exchangeNames:
-        if (name == 'VIRCUREX'):
-            xchg = Vircurex(config.VIRCUREX_USER, config.VIRCUREX_SECURITY_WORD)
-        elif (name == 'BTCE'):
-            xchg = BTCE(config.BTCE_KEYFILE)
-        elif (name == 'BTER'):
-            xchg = BTER(config.BTER_KEYFILE)
-        elif (name == 'COINS-E'):
-            xchg = CoinsE(config.COINS_E_API_KEY, config.COINS_E_SECRET)
-        elif (name == 'CRYPTSY'):
-            xchg = Cryptsy(config.CRYPTSY_API_KEY, config.CRYPTSY_SECRET)
-        elif (name == 'CRYPTO-TRADE'):
-            xchg = CryptoTrade(config.CRYPTOTRADE_API_KEY, config.CRYPTOTRADE_SECRET)
+        if (name == 'binance'):
+            xchg = CryptoExchange('binance', config.BINANCE_KEY, config.BINANCE_SECRET)
         elif (name == 'COINEX'):
             xchg = CoinEx(config.COINEX_API_KEY, config.COINEX_SECRET)
         else:
